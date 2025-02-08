@@ -48,17 +48,17 @@ export function LoanConfiguration({ data, updateData }) {
             <input
               type="range"
               id="loanAmount"
-              min="1000"
-              max="50000"
-              step="1000"
+              min="10000"
+              max="5000000"
+              step="10000"
               className="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"
               value={formData.loanAmount}
               onChange={handleChange}
             />
             <div className="mt-2 flex justify-between text-sm text-gray-600">
-              <span>$1,000</span>
-              <span className="font-medium text-blue-600">${formData.loanAmount.toLocaleString()}</span>
-              <span>$50,000</span>
+              <span>₹1,000</span>
+              <span className="font-medium text-blue-600">₹{formData.loanAmount.toLocaleString()}</span>
+              <span>₹50,000</span>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ export function LoanConfiguration({ data, updateData }) {
               <Calculator className="h-5 w-5 text-blue-500" />
               <span className="ml-2 text-sm font-medium text-gray-700">Monthly EMI</span>
             </div>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">${emi.toLocaleString()}</p>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">₹{emi.toLocaleString()}</p>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-lg">

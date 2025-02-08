@@ -1,32 +1,78 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PersonalDetails } from "./PersonalDetails";
 import { FinancialDetails } from "./FinancialDetails";
 import { DocumentUpload } from "./DocumentUpload";
-// import { VideoKYC } from "./VideoKYC";
+import { VideoKYC } from "./VideoKYC";
 import { LoanConfiguration } from "./LoanConfiguration";
-import { CheckCircle2, CircleDot } from "lucide-react";
+import { CheckCircle2, CircleDot, AlertTriangle } from "lucide-react";
 import { db, addDoc, collection } from "../../../firebase";
+import { useLoan } from '@/contexts/LoanContext';
+import { useLocation } from "react-router-dom";
 const steps = [
   { id: "personal", title: "Personal Details" },
   { id: "financial", title: "Financial Details" },
   { id: "documents", title: "Document Upload" },
   { id: "loan", title: "Loan Configuration" },
-  // { id: "kyc", title: "Video KYC" },
+  { id: "kyc", title: "Video KYC" },
 ];
+
+
+// Static validation results
+const STATIC_VALIDATION = {
+  success: Math.random() > 0.5, // Random success/failure for demo
+  errors: [
+    {
+      field: "pan_card",
+      message: "PAN card image is blurry",
+      suggestion: "Upload a clear photo of your PAN card with visible details"
+    },
+    {
+      field: "aadhaar",
+      message: "Aadhaar card back side missing",
+      suggestion: "Upload both front and back sides of your Aadhaar card"
+    }
+  ]
+};
 
 export function LoanWizard() {
   const [currentStep, setCurrentStep] = useState("personal");
+  const { selectedLoan } = useLoan();
+  const [validationResult, setValidationResult] = useState(null);
+  const [showKYC, setShowKYC] = useState(false);
 
-  // 🚀 State to store all form data
   const [loanData, setLoanData] = useState({
     personal: {},
     financial: {},
     documents: {},
-    // kyc: {},
+    kyc: {},
     loan: {},
   });
 
-  // Function to update form data
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // Extract loan data from the query string (URL)
+    const queryParams = new URLSearchParams(location.search);
+    const loanType = queryParams.get('loanType');
+    const amount = queryParams.get('amount');
+    const interestRate = queryParams.get('interestRate');
+    const tenure = queryParams.get('tenure');
+    console.log(interestRate)
+    // Update the loanData state with the extracted query parameters
+    if (loanType && amount && interestRate && tenure) {
+      setLoanData(prevData => ({
+        ...prevData,
+        loan: {
+          loanType,
+          amount,
+          interestRate,
+          tenure,
+        }
+      }));
+    }
+  }, [location.search]);  // Run whenever the query string changes
+
   const updateLoanData = (step, newData) => {
     setLoanData((prev) => ({
       ...prev,
@@ -34,46 +80,76 @@ export function LoanWizard() {
     }));
   };
 
-  // Function to submit the form
   const handleSubmit = async () => {
+
     console.log("Validating Documents...");
+    alert("Validating documents... Please wait.");
     const docRef = await addDoc(collection(db, "loanApplications"), loanData);
     console.log("Document ID:", docRef.id);
-    // Show loading message
-    alert("Validating documents... Please wait.");
 
+    // Static validation flow
+    if (STATIC_VALIDATION.success) {
+      setShowKYC(true);
+      setCurrentStep("kyc");
+    } else {
+      setValidationResult(STATIC_VALIDATION.errors);
+    }
+
+    // Dynamic implementation (keep commented)
+    /*
     try {
-      const response = await fetch("https://your-backend-api.com/validate-documents", {
+      const response = await fetch("https://your-api.com/validate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documents: loanData.documents }),
+        body: JSON.stringify(loanData.documents)
       });
-
+      
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Validation failed");
-      }
-
-      if (result.validation_status === "failed") {
-        alert(`Validation Failed: ${result.reason}\n\nSuggested Fixes:\n${result.suggestions.join("\n")}`);
+      if (result.valid) {
+        setCurrentStep("kyc");
       } else {
-        alert("Document validation successful! Submitting application...");
-
-        // Proceed with form submission
-        console.log("Submitting Loan Application:", loanData);
-
-        // You can replace this alert with an actual API call to submit the application
-        alert("Application submitted successfully!");
+        setValidationResult(result.errors);
       }
     } catch (error) {
-      console.error("Error during validation:", error);
-      alert("An error occurred during validation. Please try again.");
+      alert("Validation failed: " + error.message);
     }
+    */
   };
 
-
   const getCurrentStepContent = () => {
+    if (validationResult) {
+      return (
+        <div className="p-6 bg-red-50 rounded-lg">
+          <h3 className="text-lg font-semibold text-red-700 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            Document Validation Issues
+          </h3>
+          <div className="space-y-4">
+            {validationResult.map((error, index) => (
+              <div key={index} className="bg-white p-4 rounded-md shadow-sm">
+                <p className="text-red-600 font-medium">{error.message}</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="font-semibold">Suggested Fix:</span> {error.suggestion}
+                </p>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              setValidationResult(null);
+              setCurrentStep("documents");
+            }}
+            className="mt-6 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Re-upload Documents
+          </button>
+        </div>
+      );
+    }
+
+    if (showKYC) {
+      return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
+    }
+
     switch (currentStep) {
       case "personal":
         return <PersonalDetails data={loanData.personal} updateData={(newData) => updateLoanData("personal", newData)} />;
@@ -81,8 +157,6 @@ export function LoanWizard() {
         return <FinancialDetails data={loanData.financial} updateData={(newData) => updateLoanData("financial", newData)} />;
       case "documents":
         return <DocumentUpload data={loanData.documents} updateData={(newData) => updateLoanData("documents", newData)} />;
-      // case "kyc":
-      //   return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
       case "loan":
         return <LoanConfiguration data={loanData.loan} updateData={(newData) => updateLoanData("loan", newData)} />;
       default:
@@ -90,6 +164,7 @@ export function LoanWizard() {
     }
   };
 
+  // ... rest of the component remains same until the return statement ...
   const getStepStatus = (stepId) => {
     const stepIndex = steps.findIndex((step) => step.id === stepId);
     const currentIndex = steps.findIndex((step) => step.id === currentStep);
@@ -97,6 +172,7 @@ export function LoanWizard() {
     if (stepIndex === currentIndex) return "current";
     return "upcoming";
   };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-5">
@@ -105,17 +181,23 @@ export function LoanWizard() {
           <nav className="space-y-1">
             {steps.map((step) => {
               const status = getStepStatus(step.id);
+              const isKYCHidden = step.id === "kyc" && !showKYC;
+              
+              if (isKYCHidden) return null;
+
               return (
                 <button
                   key={step.id}
-                  onClick={() => setCurrentStep(step.id)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${status === "current"
-                    ? "bg-blue-50 text-blue-700"
-                    : status === "completed"
+                  onClick={() => !validationResult && setCurrentStep(step.id)}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${
+                    status === "current"
+                      ? "bg-blue-50 text-blue-700"
+                      : status === "completed"
                       ? "text-gray-900 hover:bg-gray-50"
                       : "text-gray-500 hover:bg-gray-50"
-                    }`}
+                  } ${validationResult ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
+                  
                   <span className="truncate flex items-center">
                     {status === "completed" ? (
                       <CheckCircle2 className="mr-3 h-5 w-5 text-blue-500" />
@@ -137,30 +219,32 @@ export function LoanWizard() {
           {getCurrentStepContent()}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between">
-            <button
-              onClick={() => {
-                const currentIndex = steps.findIndex((step) => step.id === currentStep);
-                if (currentIndex > 0) setCurrentStep(steps[currentIndex - 1].id);
-              }}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => {
-                const currentIndex = steps.findIndex((step) => step.id === currentStep);
-                if (currentIndex < steps.length - 1) {
-                  setCurrentStep(steps[currentIndex + 1].id);
-                } else {
-                  handleSubmit(); // Submit on last step
-                }
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-            >
-              {currentStep === steps[steps.length - 1].id ? "Submit Application" : "Next"}
-            </button>
-          </div>
+          {!validationResult && (
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  const currentIndex = steps.findIndex((step) => step.id === currentStep);
+                  if (currentIndex > 0) setCurrentStep(steps[currentIndex - 1].id);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => {
+                  const currentIndex = steps.findIndex((step) => step.id === currentStep);
+                  if (currentIndex < steps.length - 1) {
+                    setCurrentStep(steps[currentIndex + 1].id);
+                  } else {
+                    handleSubmit();
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              >
+                {currentStep === steps[steps.length - 1].id ? "Submit Application" : "Next"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

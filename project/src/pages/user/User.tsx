@@ -11,25 +11,18 @@ import ActiveLoans from './ActiveLoans';
 import PastLoans from './PastLoans';
 import Help from './Help';
 import Notifications from './Notifications';
-import UserHome from './UserHome'
+import UserHome from './UserHome';
 import Chatbot from '../Chatbot';
-
 
 export default function User() {
   const [selectedTab, setSelectedTab] = useState('Dashboard');
 
   // Sample state data for demo purposes
-  const applicationProgress = 65; // percent completion of the loan application
+  const applicationProgress = 65;
   const pendingActions = [
     { id: 1, message: 'Upload additional payslip' },
     { id: 2, message: 'Verify income details' },
   ];
-  const activeLoan = {
-    amount: '$10,000',
-    emi: '$300/month',
-    repaymentProgress: 40, // percent repaid
-    dueDate: '2025-03-10',
-  };
 
   // Sidebar navigation items
   const menuItems = [
@@ -39,8 +32,16 @@ export default function User() {
     { name: 'Active Loans', icon: <List size={16} />, component: <ActiveLoans /> },
     { name: 'Past Loans', icon: <List size={16} />, component: <PastLoans /> },
     { name: 'Need Help', icon: <HelpCircle size={16} />, component: <Help /> },
-    { name: 'Recent Activity & Notifications', icon: <CheckCircle size={16} />, component: <Notifications /> },
+    { name: 'Notifications', icon: <CheckCircle size={16} />, component: <Notifications /> },
   ];
+
+  // Correct Progress component usage
+  const LoanProgress = ({ value }: { value: number }) => (
+    <Progress 
+      value={value} 
+      className="h-3 bg-primary/10 [&>div]:bg-primary"
+    />
+  );
 
   return (
     <div className="container mx-auto p-6 flex gap-6">
@@ -52,7 +53,9 @@ export default function User() {
             <li
               key={item.name}
               className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition ${
-                selectedTab === item.name ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-200'
+                selectedTab === item.name 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-700 hover:bg-gray-200'
               }`}
               onClick={() => setSelectedTab(item.name)}
             >
@@ -67,8 +70,9 @@ export default function User() {
         {/* Dynamically Render Selected Component */}
         {menuItems.find((item) => item.name === selectedTab)?.component}
       </div>
-       {/* Chatbot Integration */}
-       <Chatbot />
+      
+      {/* Chatbot Integration */}
+      <Chatbot />
     </div>
   );
 }

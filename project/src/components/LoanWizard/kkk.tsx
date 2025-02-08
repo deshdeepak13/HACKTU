@@ -2,16 +2,16 @@ import { useState } from "react";
 import { PersonalDetails } from "./PersonalDetails";
 import { FinancialDetails } from "./FinancialDetails";
 import { DocumentUpload } from "./DocumentUpload";
-import { VideoKYC } from "./VideoKYC";
+// import { VideoKYC } from "./VideoKYC";
 import { LoanConfiguration } from "./LoanConfiguration";
 import { CheckCircle2, CircleDot } from "lucide-react";
-
+import { db, addDoc, collection } from "../../../firebase";
 const steps = [
   { id: "personal", title: "Personal Details" },
   { id: "financial", title: "Financial Details" },
   { id: "documents", title: "Document Upload" },
-  { id: "kyc", title: "Video KYC" },
   { id: "loan", title: "Loan Configuration" },
+  // { id: "kyc", title: "Video KYC" },
 ];
 
 export function LoanWizard() {
@@ -22,7 +22,7 @@ export function LoanWizard() {
     personal: {},
     financial: {},
     documents: {},
-    kyc: {},
+    // kyc: {},
     loan: {},
   });
 
@@ -35,11 +35,45 @@ export function LoanWizard() {
   };
 
   // Function to submit the form
-  const handleSubmit = () => {
-    console.log("Submitting Loan Application:", loanData);
-    alert("Application submitted successfully!");
-    // Add API call here if needed
+  const handleSubmit = async () => {
+    console.log("Validating Documents...");
+    alert("Validating documents... Please wait.");
+    const docRef = await addDoc(collection(db, "loanApplications"), loanData);
+    console.log("Document ID:", docRef.id);
+    
+    // Show loading message
+
+  //   try {
+  //     // const response = await fetch("https://your-backend-api.com/validate-documents", {
+  //     //   method: "POST",
+  //     //   headers: { "Content-Type": "application/json" },
+  //     //   body: JSON.stringify({ documents: loanData.documents }),
+  //     // });
+      
+
+  //     // const result = await response.json();
+
+  //     if (!(docRef.id).ok) {
+  //       throw new Error(result.message || "Validation failed");
+  //     }
+
+  //     if ((docRef.id).validation_status === "failed") {
+  //       alert(`Validation Failed: ${loan.reason}\n\nSuggested Fixes:\n${result.suggestions.join("\n")}`);
+  //     } else {
+  //       alert("Document validation successful! Submitting application...");
+
+  //       // Proceed with form submission
+  //       console.log("Submitting Loan Application:", loanData);
+
+  //       // You can replace this alert with an actual API call to submit the application
+  //       alert("Application submitted successfully!");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error during validation:", error);
+  //     alert("An error occurred during validation. Please try again.");
+  //   }
   };
+
 
   const getCurrentStepContent = () => {
     switch (currentStep) {
@@ -49,8 +83,8 @@ export function LoanWizard() {
         return <FinancialDetails data={loanData.financial} updateData={(newData) => updateLoanData("financial", newData)} />;
       case "documents":
         return <DocumentUpload data={loanData.documents} updateData={(newData) => updateLoanData("documents", newData)} />;
-      case "kyc":
-        return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
+      // case "kyc":
+      //   return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
       case "loan":
         return <LoanConfiguration data={loanData.loan} updateData={(newData) => updateLoanData("loan", newData)} />;
       default:
@@ -65,7 +99,6 @@ export function LoanWizard() {
     if (stepIndex === currentIndex) return "current";
     return "upcoming";
   };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-5">
@@ -78,13 +111,12 @@ export function LoanWizard() {
                 <button
                   key={step.id}
                   onClick={() => setCurrentStep(step.id)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${
-                    status === "current"
-                      ? "bg-blue-50 text-blue-700"
-                      : status === "completed"
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${status === "current"
+                    ? "bg-blue-50 text-blue-700"
+                    : status === "completed"
                       ? "text-gray-900 hover:bg-gray-50"
                       : "text-gray-500 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <span className="truncate flex items-center">
                     {status === "completed" ? (
@@ -128,8 +160,7 @@ export function LoanWizard() {
               }}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
             >
-              {currentStep === steps[steps.length - 1].id ? "Submit Application" : "Next" }
-              {console.log(loanData)}
+              {currentStep === steps[steps.length - 1].id ? "Submit Application" : "Next"}
             </button>
           </div>
         </div>
