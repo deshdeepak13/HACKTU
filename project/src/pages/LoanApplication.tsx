@@ -1,5 +1,5 @@
 
-import { LoanWizard } from '@/components/LoanWizard'
+import { LoanWizard } from '@/components/LoanWizard/LoanWizard'
   // import { LoanWizard } from '@/components/LoanWizard'
 
 const LoanApplication = () => {

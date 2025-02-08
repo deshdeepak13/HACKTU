@@ -1,7 +1,26 @@
-import React from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { AlertCircle } from "lucide-react";
 
-export function FinancialDetails() {
+export function FinancialDetails({ data, updateData }) {
+  const [formData, setFormData] = useState({
+    employmentType: data.employmentType || "",
+    monthlyIncome: data.monthlyIncome || "",
+    employer: data.employer || "",
+    workExperience: data.workExperience || "",
+  });
+
+  // useEffect(() => {
+  //   updateData(formData);
+  // }, [formData, updateData]);
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    const updatedData = { ...formData, [id]: value };
+  
+    setFormData(updatedData);
+    updateData(updatedData); // ✅ Only update state on user input
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white shadow-sm rounded-lg p-6">
@@ -13,8 +32,11 @@ export function FinancialDetails() {
             </label>
             <select
               id="employmentType"
+              value={formData.employmentType}
+              onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
+              <option value="">Select</option>
               <option>Full-time</option>
               <option>Part-time</option>
               <option>Self-employed</option>
@@ -32,6 +54,8 @@ export function FinancialDetails() {
               <input
                 type="text"
                 id="monthlyIncome"
+                value={formData.monthlyIncome}
+                onChange={handleChange}
                 className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -44,6 +68,8 @@ export function FinancialDetails() {
             <input
               type="text"
               id="employer"
+              value={formData.employer}
+              onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter your employer's name"
             />
@@ -55,6 +81,8 @@ export function FinancialDetails() {
             <input
               type="number"
               id="workExperience"
+              value={formData.workExperience}
+              onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               placeholder="Years of experience"
             />
@@ -83,7 +111,9 @@ export function FinancialDetails() {
         </div>
         <div className="mt-4 flex items-start space-x-3 text-sm text-gray-500">
           <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0" />
-          <p>Our AI has analyzed your financial profile and determined you're a low-risk applicant. This may positively impact your loan terms.</p>
+          <p>
+            Our AI has analyzed your financial profile and determined you're a low-risk applicant. This may positively impact your loan terms.
+          </p>
         </div>
       </div>
     </div>
