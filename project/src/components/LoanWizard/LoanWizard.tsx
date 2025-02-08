@@ -19,7 +19,7 @@ const steps = [
 
 // Static validation results
 const STATIC_VALIDATION = {
-  success: Math.random() > 0.5, // Random success/failure for demo
+  success: Math.random() > 0, // Random success/failure for demo
   errors: [
     {
       field: "pan_card",
