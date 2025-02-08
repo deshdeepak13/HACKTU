@@ -2,54 +2,60 @@ import React, { useState, useRef } from 'react';
 import { Camera, Shield, CheckCircle, RefreshCw, Upload } from 'lucide-react';
 
 export function VideoKYC() {
-  const [recording, setRecording] = useState(false);
-  const [videoURL, setVideoURL] = useState(null);
-  const [videoBlob, setVideoBlob] = useState(null);
-  const mediaRecorderRef = useRef(null);
-  const videoRef = useRef(null);
-  const chunksRef = useRef([]);
+  const [recording, setRecording] = useState<boolean>(false);
+  const [videoURL, setVideoURL] = useState<string | null>(null);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const startRecording = async () => {
     try {
-      if (recording || videoURL) return; // Prevents starting a new recording if one already exists
-      
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      if (recording || videoURL) return;
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream as MediaStream;
+        videoRef.current.play();
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event: BlobEvent) => {
         chunksRef.current.push(event.data);
       };
 
-      mediaRecorderRef.current.onstop = () => {
+      mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         setVideoBlob(blob);
         setVideoURL(url);
         chunksRef.current = [];
-        
-        // Stop video preview after recording
-        stream.getTracks().forEach(track => track.stop());
+
+        stream.getTracks().forEach((track) => track.stop());
       };
 
-      mediaRecorderRef.current.start();
+      mediaRecorder.start();
       setRecording(true);
     } catch (error) {
       console.error('Error accessing camera:', error);
     }
   };
-console.log("url",videoURL)
+
   const stopRecording = () => {
-    mediaRecorderRef.current.stop();
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
     setRecording(false);
-    videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    if (videoRef.current?.srcObject) {
+      (videoRef.current.srcObject as MediaStream).getTracks().forEach((track) => track.stop());
+    }
   };
 
   const retryRecording = () => {
     setVideoURL(null);
     setVideoBlob(null);
-    // startRecording();
   };
 
   const uploadVideo = async () => {
@@ -58,7 +64,7 @@ console.log("url",videoURL)
     formData.append('video', videoBlob, 'kyc-video.webm');
 
     try {
-      const response = await fetch('https://dummyapi.com/upload', { // Replace with actual API
+      const response = await fetch('https://dummyapi.com/upload', {
         method: 'POST',
         body: formData,
       });
@@ -93,25 +99,22 @@ console.log("url",videoURL)
               </div>
             </>
           ) : (
-            <div className="relative bg-gray-100 rounded-lg aspect-video flex items-center justify-center ">
+            <div className="relative bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
               <video ref={videoRef} className="w-full h-full object-cover rounded-lg z-10" autoPlay muted />
             </div>
           )}
-          {/* {(recording && !videoURL) ? (
-            <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">Stop Recording</button>
-          ) : (
-           !videoURL {
-            <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md bottom-0 hover:bg-blue-700 ">Start Video KYC</button>}
-          )} */}
-          <div className='w=full flex justify-center mt-2'>
 
-          {
-            recording &&  <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">Stop Recording</button>
-            
-          }
-          {
-            (!videoURL && !recording) &&  <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md bottom-0 hover:bg-blue-700 ">Start Video KYC</button>
-          }
+          <div className="w-full flex justify-center mt-2">
+            {recording && (
+              <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">
+                Stop Recording
+              </button>
+            )}
+            {!videoURL && !recording && (
+              <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md bottom-0 hover:bg-blue-700">
+                Start Video KYC
+              </button>
+            )}
           </div>
         </div>
 
