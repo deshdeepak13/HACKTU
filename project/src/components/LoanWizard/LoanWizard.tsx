@@ -5,7 +5,7 @@ import { DocumentUpload } from "./DocumentUpload";
 // import { VideoKYC } from "./VideoKYC";
 import { LoanConfiguration } from "./LoanConfiguration";
 import { CheckCircle2, CircleDot } from "lucide-react";
-
+import { db, addDoc, collection } from "../../../firebase";
 const steps = [
   { id: "personal", title: "Personal Details" },
   { id: "financial", title: "Financial Details" },
@@ -37,31 +37,32 @@ export function LoanWizard() {
   // Function to submit the form
   const handleSubmit = async () => {
     console.log("Validating Documents...");
-  
+    const docRef = await addDoc(collection(db, "loanApplications"), loanData);
+    console.log("Document ID:", docRef.id);
     // Show loading message
     alert("Validating documents... Please wait.");
-  
+
     try {
       const response = await fetch("https://your-backend-api.com/validate-documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: loanData.documents }),
       });
-  
+
       const result = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(result.message || "Validation failed");
       }
-  
+
       if (result.validation_status === "failed") {
         alert(`Validation Failed: ${result.reason}\n\nSuggested Fixes:\n${result.suggestions.join("\n")}`);
       } else {
         alert("Document validation successful! Submitting application...");
-  
+
         // Proceed with form submission
         console.log("Submitting Loan Application:", loanData);
-  
+
         // You can replace this alert with an actual API call to submit the application
         alert("Application submitted successfully!");
       }
@@ -70,7 +71,7 @@ export function LoanWizard() {
       alert("An error occurred during validation. Please try again.");
     }
   };
-  
+
 
   const getCurrentStepContent = () => {
     switch (currentStep) {
@@ -108,13 +109,12 @@ export function LoanWizard() {
                 <button
                   key={step.id}
                   onClick={() => setCurrentStep(step.id)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${
-                    status === "current"
-                      ? "bg-blue-50 text-blue-700"
-                      : status === "completed"
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${status === "current"
+                    ? "bg-blue-50 text-blue-700"
+                    : status === "completed"
                       ? "text-gray-900 hover:bg-gray-50"
                       : "text-gray-500 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <span className="truncate flex items-center">
                     {status === "completed" ? (
