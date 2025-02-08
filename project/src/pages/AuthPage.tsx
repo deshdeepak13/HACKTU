@@ -17,7 +17,7 @@ export default function AuthPage() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      navigate('/dashboard');
+      navigate('/user');
     }, 1000);
   };
 
@@ -27,7 +27,8 @@ export default function AuthPage() {
         <div className="flex justify-center mb-8">
           <div className="flex items-center space-x-2">
             <Rocket className="h-6 w-6 text-primary" />
-            <span className="text-2xl font-bold">LendAI</span>
+            <span className="text-2xl font-bold">Finसारथी
+            </span>
           </div>
         </div>
 

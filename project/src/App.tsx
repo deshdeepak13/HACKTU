@@ -4,7 +4,7 @@ import LandingPage from '@/pages/LandingPage';
 import AuthPage from '@/pages/AuthPage';
 import LoanApplication from '@/pages/LoanApplication';
 import Dashboard from '@/pages/Dashboard';
-import UserHome from './pages/UserHome';
+import User from './pages/user/User';
 
 function App() {
   return (
@@ -13,9 +13,9 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/apply" element={<LoanApplication />} />
+          <Route path="/apply" element={<LoanApplication />} />   {/*login check up dalna hai using token */ }
           {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-          <Route path="/user" element={<UserHome />} />
+          <Route path="/user" element={<User />} />
         </Routes>
         <Toaster />
       </div>

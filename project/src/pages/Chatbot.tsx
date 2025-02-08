@@ -27,8 +27,16 @@ export default function Chatbot() {
     setIsTyping(true);
 
     try {
-      const response = await axios.post("YOUR_API_ENDPOINT", { message: input });
-      setMessages((prev) => [...prev, { sender: "bot", text: response.data.reply }]);
+      const response = await axios.post("https://hacktu-backend.onrender.com/chat", {
+        session_id: "user123",
+        user_message: input,
+      });
+
+      if (response.data && response.data.advisor_response) {
+        setMessages((prev) => [...prev, { sender: "bot", text: response.data.advisor_response }]);
+      } else {
+        setMessages((prev) => [...prev, { sender: "bot", text: "I couldn't understand. Try again!" }]);
+      }
     } catch (error) {
       setMessages((prev) => [...prev, { sender: "bot", text: "Error fetching response. Try again!" }]);
     }
@@ -84,56 +92,57 @@ export default function Chatbot() {
 
                 {/* Chat Content */}
                 <CardContent className="flex-1 flex flex-col p-0">
-                  <ScrollArea ref={chatRef} className="flex-1 p-4">
-                    <LayoutGroup>
-                      <div className="space-y-4">
-                        <AnimatePresence initial={false}>
-                          {messages.map((msg, index) => (
-                            <motion.div
-                              key={index}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, x: msg.sender === "user" ? 50 : -50 }}
-                              transition={{ duration: 0.2 }}
-                              className={`flex gap-3 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
-                            >
-                              <div className="flex items-start">
-                                {msg.sender === "bot" ? (
-                                  <Bot className="w-5 h-5 mt-2 text-primary" />
-                                ) : (
-                                  <User className="w-5 h-5 mt-2 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div
-                                className={`max-w-[75%] rounded-2xl p-4 ${
-                                  msg.sender === "user"
-                                    ? "bg-primary text-primary-foreground rounded-br-sm"
-                                    : "bg-muted text-foreground rounded-bl-sm"
-                                }`}
-                              >
-                                <p className="text-sm leading-relaxed">{msg.text}</p>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
+                <ScrollArea ref={chatRef} className="flex-1 p-4 overflow-y-auto max-h-[500px]">
+  <LayoutGroup>
+    <div className="space-y-4">
+      <AnimatePresence initial={false}>
+        {messages.map((msg, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, x: msg.sender === "user" ? 50 : -50 }}
+            transition={{ duration: 0.2 }}
+            className={`flex gap-3 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+          >
+            <div className="flex items-start">
+              {msg.sender === "bot" ? (
+                <Bot className="w-5 h-5 mt-2 text-primary" />
+              ) : (
+                <User className="w-5 h-5 mt-2 text-muted-foreground" />
+              )}
+            </div>
+            <div
+              className={`max-w-[75%] rounded-2xl p-4 ${
+                msg.sender === "user"
+                  ? "bg-primary text-primary-foreground rounded-br-sm"
+                  : "bg-muted text-foreground rounded-bl-sm"
+              }`}
+            >
+              <p className="text-sm leading-relaxed">{msg.text}</p>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
 
-                        {isTyping && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex items-center gap-3 pl-1"
-                          >
-                            <Bot className="w-5 h-5 text-primary" />
-                            <div className="flex space-x-1 bg-muted rounded-2xl px-4 py-3">
-                              <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" />
-                              <div className="w-2 h-2 bg-foreground rounded-full animate-bounce delay-100" />
-                              <div className="w-2 h-2 bg-foreground rounded-full animate-bounce delay-200" />
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    </LayoutGroup>
-                  </ScrollArea>
+      {isTyping && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-3 pl-1"
+        >
+          <Bot className="w-5 h-5 text-primary" />
+          <div className="flex space-x-1 bg-muted rounded-2xl px-4 py-3">
+            <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-foreground rounded-full animate-bounce delay-100" />
+            <div className="w-2 h-2 bg-foreground rounded-full animate-bounce delay-200" />
+          </div>
+        </motion.div>
+      )}
+    </div>
+  </LayoutGroup>
+</ScrollArea>
+
 
                   {/* Input Area */}
                   <div className="border-t p-4 bg-background">

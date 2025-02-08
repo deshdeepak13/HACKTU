@@ -11,8 +11,11 @@ export function VideoKYC() {
 
   const startRecording = async () => {
     try {
+      if (recording || videoURL) return; // Prevents starting a new recording if one already exists
+      
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       videoRef.current.srcObject = stream;
+      videoRef.current.play();
       mediaRecorderRef.current = new MediaRecorder(stream);
 
       mediaRecorderRef.current.ondataavailable = (event) => {
@@ -25,6 +28,9 @@ export function VideoKYC() {
         setVideoBlob(blob);
         setVideoURL(url);
         chunksRef.current = [];
+        
+        // Stop video preview after recording
+        stream.getTracks().forEach(track => track.stop());
       };
 
       mediaRecorderRef.current.start();
@@ -33,7 +39,7 @@ export function VideoKYC() {
       console.error('Error accessing camera:', error);
     }
   };
-
+console.log("url",videoURL)
   const stopRecording = () => {
     mediaRecorderRef.current.stop();
     setRecording(false);
@@ -43,6 +49,7 @@ export function VideoKYC() {
   const retryRecording = () => {
     setVideoURL(null);
     setVideoBlob(null);
+    // startRecording();
   };
 
   const uploadVideo = async () => {
@@ -86,15 +93,26 @@ export function VideoKYC() {
               </div>
             </>
           ) : (
-            <div className="relative bg-gray-100 rounded-lg aspect-video flex items-center justify-center">
-              {recording ? (
-                <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">Stop Recording</button>
-              ) : (
-                <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md">Start Video KYC</button>
-              )}
-              <video ref={videoRef} className="hidden" autoPlay muted />
+            <div className="relative bg-gray-100 rounded-lg aspect-video flex items-center justify-center ">
+              <video ref={videoRef} className="w-full h-full object-cover rounded-lg z-10" autoPlay muted />
             </div>
           )}
+          {/* {(recording && !videoURL) ? (
+            <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">Stop Recording</button>
+          ) : (
+           !videoURL {
+            <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md bottom-0 hover:bg-blue-700 ">Start Video KYC</button>}
+          )} */}
+          <div className='w=full flex justify-center mt-2'>
+
+          {
+            recording &&  <button onClick={stopRecording} className="px-4 py-2 bg-red-600 text-white rounded-md">Stop Recording</button>
+            
+          }
+          {
+            (!videoURL && !recording) &&  <button onClick={startRecording} className="px-4 py-2 bg-blue-600 text-white rounded-md shadow-md bottom-0 hover:bg-blue-700 ">Start Video KYC</button>
+          }
+          </div>
         </div>
 
         <div className="mt-6">
