@@ -2,12 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { LoanProvider } from './contexts/LoanContext';
+import { AuthProvider } from './contexts/LoanContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LoanProvider>
-    <App />
-    </LoanProvider>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>
 );

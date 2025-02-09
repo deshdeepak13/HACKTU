@@ -1,49 +1,57 @@
-import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
+import  { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
-type LoanParams = {
-  loanType: string;
-  amount: string;
-  interestRate: string;
-  tenure: string;
-};
-
-type LoanContextType = {
-  selectedLoan: LoanParams | null;
-  setSelectedLoan: Dispatch<SetStateAction<LoanParams | null>>;
-};
-
-const LoanContext = createContext<LoanContextType>({
-  selectedLoan: null,
-  setSelectedLoan: () => {}, // Default empty function
-});
-
-export function LoanProvider({ children }: { children: ReactNode }) {
-  // Check localStorage on mount to retrieve any saved loan data
-  const storedLoan = localStorage.getItem('selectedLoan');
-  const initialLoan = storedLoan ? JSON.parse(storedLoan) : null;
-
-  const [selectedLoan, setSelectedLoan] = useState<LoanParams | null>(initialLoan);
-
-  // Sync the selectedLoan state with localStorage whenever it changes
-  useEffect(() => {
-    if (selectedLoan) {
-      localStorage.setItem('selectedLoan', JSON.stringify(selectedLoan));
-    } else {
-      localStorage.removeItem('selectedLoan'); // If null, remove from localStorage
-    }
-  }, [selectedLoan]);
-
-  return (
-    <LoanContext.Provider value={{ selectedLoan, setSelectedLoan }}>
-      {children}
-    </LoanContext.Provider>
-  );
+// Define the shape of authentication data
+interface AuthContextType {
+  user: any;
+  id: string | null;
+  login: (userData: { user: any; id: string }) => void;
+  logout: () => void;
 }
 
-export const useLoan = () => {
-  const context = useContext(LoanContext);
+// Create Context with default values
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Provider Component
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [id, setId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedId = localStorage.getItem("id");
+
+    if (storedUser && storedId) {
+      setUser(JSON.parse(storedUser));
+      setId(storedId);
+    }
+  }, []);
+
+  const login = (userData: { user: any; id: string }) => {
+    setUser(userData.user);
+    setId(userData.id);
+    localStorage.setItem("user", JSON.stringify(userData.user));
+    localStorage.setItem("id", userData.id);
+  };
+
+  const logout = () => {
+    setUser(null);
+    setId(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("id");
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, id, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Hook to use AuthContext
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useLoan must be used within a LoanProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

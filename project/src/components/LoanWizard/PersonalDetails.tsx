@@ -82,7 +82,7 @@ export function PersonalDetails({ data, updateData }) {
             name="address"
             value={formData.address}
             onChange={handleChange}
-            className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"
+            className="mt-1 block w-full p-2 border bg-white border-gray-300 rounded-md shadow-sm"
           />
         </div>
       </form>

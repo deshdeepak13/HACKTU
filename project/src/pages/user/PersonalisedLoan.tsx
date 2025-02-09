@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useLoan } from "@/contexts/LoanContext";
 
 export default function PersonalizedLoan() {
   // Indian-specific loan offers
@@ -37,7 +36,6 @@ export default function PersonalizedLoan() {
   ];
 
   const navigate = useNavigate();
-  const { setSelectedLoan } = useLoan();
 
   const handleApply = (loan: any) => {
     const queryParams = new URLSearchParams({

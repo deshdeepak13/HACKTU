@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { PersonalDetails } from "./PersonalDetails";
 import { FinancialDetails } from "./FinancialDetails";
 import { DocumentUpload } from "./DocumentUpload";
-import { VideoKYC } from "./VideoKYC";
 import { LoanConfiguration } from "./LoanConfiguration";
 import { CheckCircle2, CircleDot, AlertTriangle } from "lucide-react";
 import { db, addDoc, collection } from "../../../firebase";
-import { useLoan } from '@/contexts/LoanContext';
-import { useLocation } from "react-router-dom";
+import { useAuth } from '@/contexts/LoanContext';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 const steps = [
   { id: "personal", title: "Personal Details" },
   { id: "financial", title: "Financial Details" },
@@ -36,11 +36,13 @@ const STATIC_VALIDATION = {
 
 export function LoanWizard() {
   const [currentStep, setCurrentStep] = useState("personal");
-  const { selectedLoan } = useLoan();
+  const { login,user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [validationResult, setValidationResult] = useState(null);
   const [showKYC, setShowKYC] = useState(false);
 
-  const [loanData, setLoanData] = useState({
+  const [loanData, setLoanData] = useState(user ||{
     personal: {},
     financial: {},
     documents: {},
@@ -64,10 +66,9 @@ export function LoanWizard() {
       setLoanData(prevData => ({
         ...prevData,
         loan: {
-          loanType,
-          amount,
+          loanAmount:amount,
           interestRate,
-          tenure,
+          loanTenure:tenure,
         }
       }));
     }
@@ -81,19 +82,29 @@ export function LoanWizard() {
   };
 
   const handleSubmit = async () => {
-
+    const loanDataWithTimestamp = {
+      ...loanData, // Spread existing data
+      createdAt: Date.now(), // ✅ Add Firestore timestamp
+    };
     console.log("Validating Documents...");
     alert("Validating documents... Please wait.");
-    const docRef = await addDoc(collection(db, "loanApplications"), loanData);
-    console.log("Document ID:", docRef.id);
+    const docRef = await addDoc(collection(db, "loanApplications"), loanDataWithTimestamp);
 
+    console.log("Document written with ID: ", docRef);
+    console.log("Document ID:", docRef.id);
+    // Ensure login function is called correctly
+    login({ user: loanData, id: docRef.id });
     // Static validation flow
-    if (STATIC_VALIDATION.success) {
-      setShowKYC(true);
-      setCurrentStep("kyc");
-    } else {
-      setValidationResult(STATIC_VALIDATION.errors);
-    }
+    toast({
+      title: "Success!",
+      description: "Your loan application has been submitted successfully.",
+      variant: "default",
+    });
+
+    // ✅ Redirect to `/user` after 2 seconds
+    setTimeout(() => {
+      navigate("/user");
+    }, 2000);
 
     // Dynamic implementation (keep commented)
     /*
@@ -146,9 +157,9 @@ export function LoanWizard() {
       );
     }
 
-    if (showKYC) {
-      return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
-    }
+    // if (showKYC) {
+    //   return <VideoKYC data={loanData.kyc} updateData={(newData) => updateLoanData("kyc", newData)} />;
+    // }
 
     switch (currentStep) {
       case "personal":
@@ -182,22 +193,21 @@ export function LoanWizard() {
             {steps.map((step) => {
               const status = getStepStatus(step.id);
               const isKYCHidden = step.id === "kyc" && !showKYC;
-              
+
               if (isKYCHidden) return null;
 
               return (
                 <button
                   key={step.id}
                   onClick={() => !validationResult && setCurrentStep(step.id)}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${
-                    status === "current"
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md w-full ${status === "current"
                       ? "bg-blue-50 text-blue-700"
                       : status === "completed"
-                      ? "text-gray-900 hover:bg-gray-50"
-                      : "text-gray-500 hover:bg-gray-50"
-                  } ${validationResult ? "opacity-50 cursor-not-allowed" : ""}`}
+                        ? "text-gray-900 hover:bg-gray-50"
+                        : "text-gray-500 hover:bg-gray-50"
+                    } ${validationResult ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  
+
                   <span className="truncate flex items-center">
                     {status === "completed" ? (
                       <CheckCircle2 className="mr-3 h-5 w-5 text-blue-500" />
