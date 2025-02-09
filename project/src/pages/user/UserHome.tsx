@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, Rocket, CheckCircle2, Clock, Zap, Banknote, LineChart, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function UserHome() {
+export default function UserHome({status}) {
   // Sample state data
   const applicationProgress = 65;
   const pendingActions = [
@@ -19,6 +19,7 @@ export default function UserHome() {
     paid: '₹60,000',
     remaining: '₹90,000'
   };
+  console.log("status",status)
 
   const containerVariants = {
     hidden: { opacity: 0 },

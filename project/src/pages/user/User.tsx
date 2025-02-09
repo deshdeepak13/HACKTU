@@ -22,6 +22,8 @@ export default function User() {
   const [selectedTab, setSelectedTab] = useState("Dashboard");
   const { id: userId, user } = useAuth(); // Get userId from context
   const [userData, setUserData] = useState(null);
+  // const [userData, setUserData] = useState(null);
+  const [status, setstatus] = useState(null)
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -60,35 +62,8 @@ export default function User() {
         Your application has been approved! 🎉
       </div>);
 
-const status = userData?.status ? userData.status.trim() : "Unknown";
-switch (status)  {
-
-      case "Video Verification Requested":
-        return (
-          <div className="p-4 bg-yellow-50 border border-yellow-400  rounded-lg flex justify-between items-center">
-            <span>Please submit a verification video for final confirmation.</span>
-            <Button className="bg-black text-white" onClick={() => navigate("/video")} variant="outline">
-              Go to Video KYC
-            </Button>
-          </div>
-        );
-      case "Approved":
-        return (
-          <div className="p-4 bg-green-50 border border-green-400 text-green-800 rounded-lg flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-            Your application has been approved! 🎉
-          </div>
-        );
-      case "Rejected":
-        return (
-          <div className="p-4 bg-red-50 border border-red-400 text-red-800 rounded-lg flex items-center">
-            <AlertCircle className="w-5 h-5 mr-2 text-red-600" />
-            Unfortunately, your application was rejected.
-          </div>
-        );
-      default:
-        return <p className="text-gray-600">Fetching your application status...</p>;
-    }
+ setstatus(userData?.status ? userData.status.trim() : "Unknown");
+//
   };
   // Right after you retrieve userData:
   const createdAtValue = userData?.createdAt;
@@ -104,7 +79,7 @@ switch (status)  {
   }
   console.log(user)
   const menuItems = [
-    { name: "Home", icon: <Home size={18} />, component: <UserHome /> },
+    { name: "Home", icon: <Home size={18} />, component: <UserHome status={status} /> },
     { name: "Dashboard", icon: <CheckCircle size={18} />, component: <Dashboard /> },
     { name: "Personalized Loans", icon: <BookOpen size={18} />, component: <PersonalisedLoan /> },
     { name: "Active Loans", icon: <List size={18} />, component: <ActiveLoans /> },
