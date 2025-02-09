@@ -60,7 +60,8 @@ export default function User() {
         Your application has been approved! 🎉
       </div>);
 
-    switch (userData.status.trim()) {
+const status = userData?.status ? userData.status.trim() : "Unknown";
+switch (status)  {
 
       case "Video Verification Requested":
         return (
